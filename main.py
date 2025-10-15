@@ -87,6 +87,7 @@ class Carte:
             self.label.place(x=self.x, y=self.y)
         else:
             self.label.place(x=0, y=0)
+        self.label.image = self.img 
     
     def deplacer_carte(self, x: int = None, y: int = None, carte_dessous = None) -> None:
         """ Change la position de la carte sur la fenêtre """
@@ -94,17 +95,22 @@ class Carte:
             return
         elif x == None:
             self.label.place_configure(y=y)
+            self.label.y = y
             self.y = y
         elif y == None:
             self.label.place_configure(x=x)
+            self.label.x = x
             self.x = x
         else:
-            self.label.place(x=x, y=y)
+            self.label.place_configure(x=x, y=y)
+            self.label.x = x
+            self.label.y = y
             self.x = x
             self.y = y
 
         if carte_dessous != None:
             self.label.lift(carte_dessous.label) # permet de superposer les cartes correctement
+        fenetre.update_idletasks()
 
     def changer_visibilite_image(self) -> None:
         if self.visible == True:
@@ -114,6 +120,7 @@ class Carte:
             self.img = PhotoImage(file="cartes/"+self.valeur+"_"+self.couleur+".gif")
             self.visible = True
         self.label.configure(image=self.img)
+        self.label.image = self.img
 
 class PileInfos(Pile):
     """ Permet de stocker des informations sur une Pile de cartes : 
@@ -151,7 +158,8 @@ class Jeu:
 
     def initialiser_jeu(self) -> None:
         # création des cartes
-        self.cartes = [Carte(couleur, valeur, False, None) for couleur in ['coeur', 'carreau', 'trefle', 'pique'] for valeur in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']]
+        self.cartes = [Carte(couleur, valeur, False, None, 10, 10) for couleur in ['coeur', 'carreau', 'trefle', 'pique'] for valeur in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']]
+        self.cartes.pop(0).deplacer_carte(300, 500) # on met l'as de coeur face visible pour tester
         self.distribuer_cartes()
 
     def distribuer_cartes(self):
@@ -180,7 +188,6 @@ class Jeu:
     def determiner_carte_cliquee(self, event):
         x = event.x_root - fenetre.winfo_rootx()
         y = event.y_root - fenetre.winfo_rooty()
-        coordonnees = (x, y)
         pile_cliquee = None
         carte_cliquee = None
         for pile in self.liste_pile:
@@ -190,7 +197,7 @@ class Jeu:
             label = sommet.label
             x0 = label.winfo_x()
             x1 = x0 + label.winfo_width()
-            if x0 < coordonnees[0] < x1:
+            if x0 < x < x1:
                 pile_cliquee = pile
                 break
 
@@ -204,11 +211,12 @@ class Jeu:
             if pile_cliquee != self.pioche_cartes_sorties:
                 coor0 = label.winfo_y()
                 coor1 = coor0 + label.winfo_height()
-                coor_clic = coordonnees[1]
+                coor_clic = y
             else:
                 coor0 = label.winfo_x()
                 coor1 = coor0 + label.winfo_height()
-                coor_clic = coordonnees[0]
+                coor_clic = x
+
             if coor0 < coor_clic < coor1 and carte.visible:
                 carte_cliquee = carte
                 break
@@ -221,6 +229,15 @@ class Jeu:
         self.carte_cliquee = carte_cliquee
         if carte_cliquee != None:
             print("Carte cliquée :", carte_cliquee.couleur, carte_cliquee.valeur)
+        elif 10 <= x <= 137 and 10 <= y <= 190: # coordonnées de la pioche
+            if not self.pioche.est_vide():
+                print("Pioche cliquée")
+                self.piocher()
+            else:
+                print("Pioche vide")
+                self.renfiler_pioche()
+        else:
+            print("Aucune carte cliquée")
         return carte_cliquee
 
     def verifier_validite_deplacement(self):
@@ -233,22 +250,30 @@ class Jeu:
         pass
 
     def piocher(self) -> None:
-        if self.pioche.est_vide():
-            self.renfiler_pioche()
+        nb_cartes_a_piocher = min(3, self.pioche.taille())
+        nb_cartes_a_recuperer = 3 - nb_cartes_a_piocher
+        pile_intermediaire = Pile()
+        for _ in range(nb_cartes_a_recuperer): # on récupère les cartes sorties de la pioche pour les remettre dans la pioche
+            carte = self.pioche_cartes_sorties.depiler()
+            pile_intermediaire.empiler(carte)
         x = 140
-        for _ in range(3):
-            if self.pioche.est_vide():
-                break
-            carte = self.pioche.defiler()
+        for _ in range(3): 
+            if not pile_intermediaire.est_vide():
+                carte = pile_intermediaire.depiler()
+            else:
+                carte = self.pioche.defiler()
+                carte.changer_visibilite_image()
+            
+            if not self.pioche_cartes_sorties.est_vide():
+                carte.deplacer_carte(x, 10, self.pioche_cartes_sorties.sommet())
+            else:
+                carte.deplacer_carte(x, 10)
+            carte.pile = self.pioche_cartes_sorties
             self.pioche_cartes_sorties.empiler(carte)
-            carte.changer_visibilite_image()
-            carte.deplacer_carte(x, 10)
             x += 40
 
     def renfiler_pioche(self) -> None:
-        if self.pioche_cartes_sorties.est_vide():
-            return
-        else:
+        if not self.pioche_cartes_sorties.est_vide():
             pile_intermediaire = Pile()
             for _ in range(self.pioche_cartes_sorties.taille()):
                 carte = self.pioche_cartes_sorties.depiler()
@@ -256,6 +281,9 @@ class Jeu:
             for _ in range(pile_intermediaire.taille()):
                 carte = pile_intermediaire.depiler()
                 self.pioche.enfiler(carte)
+                carte.pile = self.pioche
+                carte.changer_visibilite_image()
+                carte.deplacer_carte(10, 10)
 
     def bouger_carte(self):
 
@@ -274,4 +302,4 @@ if __name__ == "__main__":
     jeu.initialiser_jeu()
     fenetre.bind("<Button-1>", lambda event: jeu.determiner_carte_cliquee(event))
     fenetre.mainloop()
-    print (jeu.pile_couleur_carreau.p)
+    #print (jeu.pile_couleur_carreau.p)
