@@ -159,7 +159,6 @@ class Jeu:
     def initialiser_jeu(self) -> None:
         # création des cartes
         self.cartes = [Carte(couleur, valeur, False, None, 10, 10) for couleur in ['coeur', 'carreau', 'trefle', 'pique'] for valeur in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']]
-        self.cartes.pop(0).deplacer_carte(300, 500) # on met l'as de coeur face visible pour tester
         self.distribuer_cartes()
 
     def distribuer_cartes(self):
