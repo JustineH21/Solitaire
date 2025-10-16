@@ -182,11 +182,13 @@ class Jeu:
         self.pioche = File(self.cartes) # le reste des cartes constitue la pioche
 
     def changer_carte_de_pile(self, pile_source: PileInfos, pile_cible: PileInfos) -> None:
+
         if pile_source.est_vide():
             print("la pile est vide.")
             return
+        
         carte = pile_source.depiler() 
-        carte.pile = pile_cible#Met à jour la pile de base
+        carte.pile = pile_cible #Met à jour la pile de base
         nouvelle_y = 200 + 35 * pile_cible.taille() #Calcule de la nouvelle position graphique de la carte
         carte.deplacer_carte(x=pile_cible.x, y=nouvelle_y)
         pile_cible.empiler(carte)#Empile la carte dans pile cible
@@ -195,8 +197,8 @@ class Jeu:
             pile_source.sommet().changer_visibilite_image()
         print(f" La carte {carte.valeur} de {carte.couleur} déplacée de la pile {pile_source.numero} vers la pile {pile_cible.numero}.")
 
-
     def determiner_carte_cliquee(self, event):
+
         x = event.x_root - fenetre.winfo_rootx()
         y = event.y_root - fenetre.winfo_rooty()
         pile_cliquee = None
@@ -216,6 +218,7 @@ class Jeu:
             pile_cliquee = self.pioche_cartes_sorties # si ce n'est aucune des piles de jeu, c'est forcément une carte de celles sorties de la pioche
 
         pile_intermediaire = Pile()
+
         for _ in range(pile_cliquee.taille()):
             carte = pile_cliquee.sommet()
             label = carte.label
@@ -238,12 +241,16 @@ class Jeu:
             pile_cliquee.empiler(pile_intermediaire.depiler())
 
         self.carte_cliquee = carte_cliquee
+
         if carte_cliquee != None:
             print("Carte cliquée :", carte_cliquee.couleur, carte_cliquee.valeur)
+
         elif 10 <= x <= 137 and 10 <= y <= 190: # coordonnées de la pioche
+
             if not self.pioche.est_vide():
                 print("Pioche cliquée")
                 self.piocher()
+
             else:
                 print("Pioche vide")
                 self.renfiler_pioche()
@@ -276,6 +283,7 @@ class Jeu:
                 return True
             else:
                 return False
+            
         else:
             # Couleurs différentes (rouge/noir)
             couleurs_rouges = ['coeur', 'carreau']
@@ -309,7 +317,6 @@ class Jeu:
             # Partie pas encore gagnée
             return False
 
-
     def devoiler_carte_dessus(self):
 
         for pile in self.liste_pile:
@@ -318,9 +325,8 @@ class Jeu:
                 if not carte_sommet.visible:  
                     carte_sommet.changer_visibilite_image() 
 
-
-
     def piocher(self) -> None:
+
         nb_cartes_a_piocher = min(3, self.pioche.taille())
         nb_cartes_a_recuperer = 3 - nb_cartes_a_piocher
         pile_intermediaire = Pile()
@@ -368,8 +374,10 @@ class Jeu:
             self.pile_couleur_trefle,
             self.pile_couleur_pique
         ]:
+            
             if pile_cible == self.carte_cliquee.pile:
                 continue  #peut pas déplacer vers la même pile
+
             if self.verifier_validite_deplacement(self.carte_cliquee, pile_cible):
                 pile_source = self.carte_cliquee.pile
                 carte_a_deplacer = pile_source.depiler()
@@ -384,7 +392,24 @@ class Jeu:
                 print(f"La carte {carte_a_deplacer.valeur} de {carte_a_deplacer.couleur} déplacée vers la pile {pile_cible.numero if pile_cible.numero else pile_cible.couleur}")
                 self.carte_cliquee = None
                 break  # une seule carte déplacée à la fois
-            
+    
+    def bouger_plusieurs_cartes (self, pile_vers_ou_deplace: PileInfos):
+
+        if self.cartes_cliquee is None or self.verifier_validite_deplacement(self.carte_cliquee, pile_vers_ou_deplace.sommet()):
+            return
+        
+        while self.cartes_cliquee.pile.sommet() != self.cartes_cliquee: #tant qu'on retrouve pas la carte
+            self.pile_deplacement.empiler(self.cartes_cliquee.pile.depiler())
+
+        self.pile_deplacement.empiler(self.carte_cliquee.pile.depiler())
+
+        while self.pile_deplacement.taille() > 0:
+            carte = self.pile_deplacement.depiler()
+            carte.pile = pile_vers_ou_deplace
+            nouvelle_y = 200 + 35 * pile_vers_ou_deplace.taille() if pile_vers_ou_deplace.numero else 10
+            carte.deplacer_carte(x=pile_vers_ou_deplace.x, y=nouvelle_y, carte_dessous=pile_vers_ou_deplace.sommet())
+            self.pile_vers_ou_deplace.empiler(carte) 
+        
 # vérifier fonctionnement de la pioche
 """jeu = Jeu([3, 1, 5, 8, 9, 14, 23, 12])
 for i in range(5):
