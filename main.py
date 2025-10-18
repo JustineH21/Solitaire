@@ -1,5 +1,6 @@
-import random
 from Carte_et_PileInfos import*
+import random
+
 
 class Jeu:
     def __init__(self, pioche: list = None):
