@@ -1,6 +1,5 @@
-from Carte_et_PileInfos import*
 import random
-
+from Carte_et_PileInfos import*
 
 class Jeu:
     def __init__(self, pioche: list = None):
@@ -48,22 +47,6 @@ class Jeu:
                 self.liste_pile[j].empiler(carte) # on le fait après pour encore avoir accès à la carte juste avant
 
         self.pioche = File(self.cartes) # le reste des cartes constitue la pioche
-
-    def changer_carte_de_pile(self, pile_source: PileInfos, pile_cible: PileInfos) -> None:
-
-        if pile_source.est_vide():
-            print("la pile est vide.")
-            return
-        
-        carte = pile_source.depiler() 
-        carte.pile = pile_cible #Met à jour la pile de base
-        nouvelle_y = 200 + 35 * pile_cible.taille() #Calcule de la nouvelle position graphique de la carte
-        carte.deplacer_carte(x=pile_cible.x, y=nouvelle_y)
-        pile_cible.empiler(carte)#Empile la carte dans pile cible
-    
-        if not pile_source.est_vide():#Si la pile source n’est pas vide, dévoiler sa nouvelle carte du dessus
-            pile_source.sommet().changer_visibilite_image()
-        print(f" La carte {carte.valeur} de {carte.couleur} déplacée de la pile {pile_source.numero} vers la pile {pile_cible.numero}.")
 
     def determiner_carte_cliquee(self, event):
 
@@ -230,8 +213,7 @@ class Jeu:
                 carte.changer_visibilite_image()
                 carte.deplacer_carte(10, 10)
 
-    def bouger_carte(self) -> None:
-
+    def bouger_carte_1(self) -> None:
         """ Déplace la carte cliquée vers une pile valide si possible"""
         if self.carte_cliquee is None:
             return  # aucune carte à déplacer
@@ -262,8 +244,7 @@ class Jeu:
                 self.carte_cliquee = None
                 break  # une seule carte déplacée à la fois
         
-
-    def bouger_plusieurs_cartes (self) -> None:
+    def bouger_carte (self) -> None:
         """ Déplace la carte cliquée et toutes les cartes en dessous vers une pile valide si possible"""
 
         if self.carte_cliquee is None:
@@ -317,6 +298,7 @@ for i in range(5):
 jeu = Jeu()
 
 if __name__ == "__main__":
+    
     jeu.initialiser_jeu()
     fenetre.bind("<Button-1>", lambda event: jeu.determiner_carte_cliquee(event))
     fenetre.mainloop()
