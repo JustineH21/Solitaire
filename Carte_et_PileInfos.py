@@ -1,11 +1,9 @@
 import tkinter as tk
 from tkinter import PhotoImage
-
 from Pile_et_File import Pile, File
 
 fenetre = tk.Tk()
-fenetre.geometry("1000x600")
-fenetre.resizable(False, False)
+fenetre.geometry("1200x700")
 fenetre.configure(bg = "bisque3")
 fenetre.title("Solitaire")
 fenetre.attributes('-topmost', 1)
@@ -57,7 +55,6 @@ class Carte:
 
         if carte_dessous != None:
             self.label.lift(carte_dessous.label) # permet de superposer les cartes correctement
-        fenetre.update_idletasks()
 
     def changer_visibilite_image(self) -> None:
         if self.visible == True:
@@ -67,7 +64,6 @@ class Carte:
             self.img = PhotoImage(file="cartes/"+self.valeur+"_"+self.couleur+".gif")
             self.visible = True
         self.label.configure(image=self.img)
-        self.label.image = self.img
 
 class PileInfos(Pile):
     """ Permet de stocker des informations sur une Pile de cartes : 
