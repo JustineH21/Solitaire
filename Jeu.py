@@ -4,7 +4,6 @@ from Pile_et_File import *
 
 class Jeu:
     """ Classe représentant le jeu de Solitaire """
-
     def __init__(self, pioche: list = None) -> None:
         self.cartes: list = [] # liste de toutes les cartes du jeu
         self.pioche: File = File(pioche)
@@ -21,20 +20,31 @@ class Jeu:
         self.pile_jeu7: PileInfos = PileInfos(7, None, 850)
         self.liste_pile: list [PileInfos] = [self.pile_jeu1, self.pile_jeu2, self.pile_jeu3, self.pile_jeu4, self.pile_jeu5, self.pile_jeu6, self.pile_jeu7]
 
-        self.pile_couleur_coeur: PileInfos = PileInfos(None, 'coeur', 600)
-        self.pile_couleur_carreau: PileInfos = PileInfos(None, 'carreau', 750)
-        self.pile_couleur_trefle: PileInfos = PileInfos(None, 'trefle', 900)
-        self.pile_couleur_pique: PileInfos = PileInfos(None, 'pique', 1050)
+        self.pile_couleur_coeur: PileInfos = PileInfos(None, 'coeur', 430)
+        self.pile_couleur_carreau: PileInfos = PileInfos(None, 'carreau', 570)
+        self.pile_couleur_trefle: PileInfos = PileInfos(None, 'trefle', 710)
+        self.pile_couleur_pique: PileInfos = PileInfos(None, 'pique', 850)
+        self.dict_pile_couleur: dict ["couleur": [PileInfos, tk.Label, PhotoImage]] = {"coeur": [self.pile_couleur_coeur, None, None], "carreau": [self.pile_couleur_carreau, None, None], "trefle": [self.pile_couleur_trefle, None, None], "pique": [self.pile_couleur_pique, None, None]}
+
+        for couleur in self.dict_pile_couleur.keys(): # affichage des piles de fondation
+            self.dict_pile_couleur[couleur][2] = PhotoImage(file="cartes/"+couleur+".gif")
+            self.dict_pile_couleur[couleur][1] = tk.Label(canvas_jeu, borderwidth=0, image=self.dict_pile_couleur[couleur][2])
+            self.dict_pile_couleur[couleur][1].place(x=self.dict_pile_couleur[couleur][0].x, y=10)
+            self.dict_pile_couleur[couleur][1].lower()
+        
+        # affichage de la pioche
+        self.img_pioche = PhotoImage(file="cartes/renfiler.gif")
+        self.affichage_pioche = tk.Label(canvas_jeu, borderwidth=0, image=self.img_pioche)
+        self.affichage_pioche.place(x=10, y=10)
+        self.affichage_pioche.lower()
 
     def initialiser_jeu(self) -> None:
         """ Initialise le jeu en créant les cartes et en les distribuant dans les piles de jeu """
-
         self.cartes = [Carte(couleur, valeur, False, None, 10, 10) for couleur in ['coeur', 'carreau', 'trefle', 'pique'] for valeur in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']]
         self.distribuer_cartes()
 
     def distribuer_cartes(self) -> None:
         """ Distribue les cartes dans les piles de jeu au début de la partie """
-
         random.shuffle(self.cartes)
 
         for i in range(7): # pour chaque pile de jeu
@@ -43,20 +53,17 @@ class Jeu:
                 carte.pile = self.liste_pile[j]
 
                 if carte.pile.est_vide():
-                    carte.deplacer_carte(self.liste_pile[j].x, 200 + 35 * i)
+                    carte.deplacer_carte(self.liste_pile[j].x, 200 + 30 * i)
                 else:
-                    carte.deplacer_carte(carte.pile.x, 200 + 35 * i, carte.pile.sommet())
+                    carte.deplacer_carte(carte.pile.x, 200 + 30 * i, carte.pile.sommet())
 
                 self.liste_pile[j].empiler(carte) # on le fait après pour encore avoir accès à la carte juste avant
 
         self.devoiler_carte_dessus() # dévoile la carte du dessus de chaque pile de jeu
         self.pioche = File(self.cartes) # le reste des cartes constitue la pioche
-        #print([self.pioche.f[i].valeur + " de " + self.pioche.f[i].couleur for i in range(self.pioche.taille())])
 
     def distribuer_cartes_pioche(self, file_cartes: File) -> None:
         """ Distribue les cartes qui lui sont données vers la défausse (pioche_cartes_sorties) """
-        #print([file_cartes.f[i].valeur + " de " + file_cartes.f[i].couleur for i in range(file_cartes.taille())])
-
         x: int = 145
         for _ in range(min(3, file_cartes.taille())): # pour éviter qu'il y ait plus que 3 cartes 
             carte = file_cartes.defiler()
@@ -69,11 +76,9 @@ class Jeu:
                 carte.deplacer_carte(x, 10)
             self.pioche_cartes_sorties.empiler(carte)
             x += 40
-        #print([self.pioche_cartes_sorties.p[i].valeur + " de " + self.pioche_cartes_sorties.p[i].couleur for i in range(self.pioche_cartes_sorties.taille())])
 
     def determiner_carte_cliquee(self, event: object) -> None:
         """ Détermine la carte qui a été cliquée par le joueur en fonction des coordonnées du clic """
-        
         x: int = event.x_root - fenetre.winfo_rootx()
         y: int = event.y_root - fenetre.winfo_rooty()
         carte_cliquee = None
@@ -83,22 +88,17 @@ class Jeu:
                 self.piocher(nb_cartes_a_piocher = min(3, self.pioche.taille()))
             else:
                 self.renfiler_pioche()
-        elif 225 <= x <= 355 and 10 <= y <= 190: # coordonnées des cartes de la défausse
-            pile_intermediaire = Pile()
-            for _ in range(min(3, self.pioche_cartes_sorties.taille())):
-                pile_intermediaire.empiler(self.pioche_cartes_sorties.depiler())
-                label = pile_intermediaire.sommet().label
-                x0 = label.winfo_x()
-                x1 = x0 + label.winfo_width()
-                if x0 < x < x1:
-                    carte_cliquee = pile_intermediaire.sommet()
-                    break
-            while not pile_intermediaire.est_vide():
-                self.pioche_cartes_sorties.empiler(pile_intermediaire.depiler())
-            self.carte_cliquee = carte_cliquee
+        elif not(self.pioche_cartes_sorties.est_vide()) and 145 <= x <= 360 and 10 <= y <= 190: # coordonnées des cartes de la défausse
+            if self.pioche_cartes_sorties.sommet().x <= x <= self.pioche_cartes_sorties.sommet().x + 130 and 10 <= y <= 190: # coordonnées de la carte de la défausse
+                carte_cliquee = self.pioche_cartes_sorties.sommet()
+                self.carte_cliquee = carte_cliquee
         else:
             pile_cliquee = None
-            for pile in self.liste_pile:
+            if 10 <= y <= 190:  # coordonnées des piles de fondation
+                liste_piles = [self.pile_couleur_coeur, self.pile_couleur_carreau, self.pile_couleur_trefle, self.pile_couleur_pique]
+            else:
+                liste_piles = self.liste_pile
+            for pile in liste_piles:
                 if not pile.est_vide():
                     sommet = pile.sommet()
                     label = sommet.label
@@ -204,24 +204,22 @@ class Jeu:
         for pile in piles_fondation:
             if pile.taille() != 13:  
                 victoire = False
-                break  # victoire impossible
+                break  # victoire impossible s'il y a moins de 13 cartes dans une pile de fondation (pile incomplète)
 
-            if victoire:
-                print(" YOU WINNER ")
+        if victoire:
+            print(" YOU WINNER ")
             return True
         else:
             # Partie pas encore gagnée
             return False
 
     def devoiler_carte_dessus(self) -> None:
-
         """
         Dévoile la carte du dessus de chaque pile de jeu s'il y en a une et si elle n'est pas déjà visible 
         On regarde chaque pile de jeu dans la liste des piles de jeu:
         - si la pile n'est pas vide, on prend la carte du dessus
         - si cette carte n'est pas visible, on change sa visibilité pour la rendre visible
         """
-
         for pile in self.liste_pile:
             if not pile.est_vide():         
                 carte_sommet = pile.sommet()  
@@ -230,7 +228,6 @@ class Jeu:
 
     def piocher(self, nb_cartes_a_piocher: int = 0) -> None:
         """ Pioche des cartes de la pioche vers la pioche_cartes_sorties"""
-
         nb_cartes_a_decaler = min(3, self.pioche_cartes_sorties.taille())
         pile_intermediaire = Pile()
         for _ in range(nb_cartes_a_decaler):
@@ -242,15 +239,19 @@ class Jeu:
             self.pioche_cartes_sorties.empiler(carte)
 
         nb_cartes_a_recuperer = 3 - nb_cartes_a_piocher
-        pile_intermediaire = File()
+        pile_intermediaire2 = File()
+        pile_intermediaire1 = Pile()
         for _ in range(nb_cartes_a_recuperer): # on récupère les cartes sorties de la pioche pour les remettre dans la pioche
             carte = self.pioche_cartes_sorties.depiler()
-            pile_intermediaire.enfiler(carte)
+            pile_intermediaire1.empiler(carte)
+        while not pile_intermediaire1.est_vide():
+            carte = pile_intermediaire1.depiler()
+            pile_intermediaire2.enfiler(carte)
         for _ in range(nb_cartes_a_piocher): # on pioche les nouvelles cartes
             carte = self.pioche.defiler()
-            pile_intermediaire.enfiler(carte)
+            pile_intermediaire2.enfiler(carte)
         
-        self.distribuer_cartes_pioche(pile_intermediaire)
+        self.distribuer_cartes_pioche(pile_intermediaire2)
 
         if self.pioche.est_vide():
             self.nb_cartes_pioche_sorties = min(3, self.pioche_cartes_sorties.taille())
@@ -270,40 +271,6 @@ class Jeu:
                 carte.pile = self.pioche
                 carte.changer_visibilite_image()
                 carte.deplacer_carte(10, 10)
-
-        #print([self.pioche.f[i].valeur + " de " + self.pioche.f[i].couleur for i in range(self.pioche.taille())])
-
-    def bouger_carte_1(self) -> None: #test de deplacement d'une seule carte
-        """ Déplace la carte cliquée vers une pile valide si possible"""
-        if self.carte_cliquee is None:
-            return  # aucune carte à déplacer
-
-        # On parcourt toutes les piles de jeu pour trouver une pile valide
-        for pile_cible in self.liste_pile + [
-            self.pile_couleur_coeur,
-            self.pile_couleur_carreau,
-            self.pile_couleur_trefle,
-            self.pile_couleur_pique
-        ]:
-            
-            if (not pile_cible == self.carte_cliquee.pile) and self.verifier_validite_deplacement(self.carte_cliquee, pile_cible):
-                pile_source = self.carte_cliquee.pile
-                if pile_source == self.pioche_cartes_sorties:
-                    self.nb_cartes_pioche_sorties -= 1
-                carte_a_deplacer = pile_source.depiler()
-                carte_a_deplacer.pile = pile_cible
-                nouvelle_y = 200 + 35 * pile_cible.taille() if pile_cible.numero else 10
-                if pile_cible.est_vide():
-                        carte_a_deplacer.deplacer_carte(x=pile_cible.x, y=nouvelle_y)
-                else:
-                    carte_a_deplacer.deplacer_carte(x=pile_cible.x, y=nouvelle_y, carte_dessous=pile_cible.sommet())
-                pile_cible.empiler(carte_a_deplacer)
-
-                self.carte_cliquee = None
-                break  # une seule carte déplacée à la fois
-
-        self.devoiler_carte_dessus()
-        self.verifier_victoire()
         
     def bouger_carte (self) -> None:
         """ Déplace la carte cliquée et toutes les cartes en dessous vers une pile valide si possible"""
@@ -314,18 +281,17 @@ class Jeu:
         pile_deplacement: Pile = Pile()
         pile_source: PileInfos = self.carte_cliquee.pile
 
-        while pile_source.sommet() != self.carte_cliquee: #tant qu'on retrouve pas la carte
+        while pile_source.sommet() != self.carte_cliquee: #tant qu'on ne retrouve pas la carte
             pile_deplacement.empiler(pile_source.depiler())
 
-        pile_deplacement.empiler(pile_source.depiler()) #on empile la carte cliquée aussi
+        pile_deplacement.empiler(pile_source.depiler()) # on empile la carte cliquée aussi
 
-        for pile_cible in self.liste_pile + [self.pile_couleur_coeur, self.pile_couleur_carreau, self.pile_couleur_trefle, self.pile_couleur_pique]: #deplacement intelligent
-            
+        for pile_cible in [self.pile_couleur_coeur, self.pile_couleur_carreau, self.pile_couleur_trefle, self.pile_couleur_pique] + self.liste_pile: # deplacement intelligent
             if not(pile_cible == pile_source) and self.verifier_validite_deplacement(self.carte_cliquee, pile_cible):                
                 while pile_deplacement.taille() > 0:
                     carte = pile_deplacement.depiler()
                     carte.pile = pile_cible
-                    nouvelle_y = 200 + 35 * pile_cible.taille() if pile_cible.numero else 10
+                    nouvelle_y = 200 + 30 * pile_cible.taille() if pile_cible.numero else 10
                     if pile_cible.est_vide():
                         carte.deplacer_carte(x=pile_cible.x, y=nouvelle_y)
                     else:
@@ -334,14 +300,30 @@ class Jeu:
 
                 if pile_source == self.pioche_cartes_sorties:
                     if self.pioche_cartes_sorties.taille() > 3:
-                        self.piocher(nb_cartes_a_piocher = 0) # pour réajuster l'affichage des cartes sorties de la pioche
+                        pile_intermediaire = Pile()
+                        for _ in range(3):
+                            carte = self.pioche_cartes_sorties.depiler()
+                            pile_intermediaire.empiler(carte)
+                        x = 145
+                        while not pile_intermediaire.est_vide():
+                            carte = pile_intermediaire.depiler()
+                            if not self.pioche_cartes_sorties.est_vide():
+                                carte.deplacer_carte(x, 10, carte_dessous = self.pioche_cartes_sorties.sommet())
+                            else:
+                                carte.deplacer_carte(x, 10)
+                            self.pioche_cartes_sorties.empiler(carte)
+                            x += 40
                         self.nb_cartes_pioche_sorties = 3
                     else:
                         self.nb_cartes_pioche_sorties -= pile_deplacement.taille()
                 
                 self.carte_cliquee = None
                 self.devoiler_carte_dessus()
-                self.verifier_victoire()
+                if self.verifier_victoire():
+                    canvas_jeu.destroy()
+                    canvas_gagne = tk.Canvas(fenetre, width=1000, height=750, bg="darkseagreen1")
+                    canvas_gagne.pack()
+                    canvas_gagne.create_text(500, 320, text="YOU WINNER", font=("Arial", 50), fill="black")
                 return # déplacement réussi
 
         #si on ne peut pas déplacer les cartes, on les remet dans leur pile d'origine

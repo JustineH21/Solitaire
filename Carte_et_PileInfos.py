@@ -3,20 +3,21 @@ from tkinter import PhotoImage
 from Pile_et_File import Pile, File
 
 fenetre = tk.Tk()
-fenetre.geometry("1200x700")
-fenetre.configure(bg = "bisque3")
+fenetre.geometry("1000x750")
+fenetre.configure(bg="bisque3")
+canvas_jeu = tk.Canvas(fenetre, width=1200, height=1000, bg="bisque3")
+canvas_jeu.pack()
 fenetre.title("Solitaire")
 fenetre.attributes('-topmost', 1)
 
 class Carte:
     """ Représente une carte du jeu de Solitaire"""
-
     def __init__(self, couleur:str, valeur:int, visible: bool, pile: Pile, x:int = None, y:int = None) -> None:
         self.couleur: str = couleur
         self.valeur: int = valeur
         self.visible: bool = visible # True si la carte est face visible, False si la carte est face cachée
         self.pile: Pile = pile # Pile à laquelle la carte appartient
-        self.label = tk.Label(fenetre, borderwidth=0)
+        self.label = tk.Label(canvas_jeu, borderwidth=0)
         self.x = x
         self.y = y
         self.afficher_carte() # affiche la carte à sa création
@@ -28,12 +29,10 @@ class Carte:
         >>> ('coeur', 5)
         >>> ('pique', 12)
         """
-        
         return (self.couleur, self.valeur)
     
     def afficher_carte(self) -> None:
         """ Affiche la carte sur la fenêtre """
-
         if self.visible == True:
             self.img = PhotoImage(file="cartes/"+self.valeur+"_"+self.couleur+".gif")
         else:
@@ -43,11 +42,9 @@ class Carte:
             self.label.place(x=self.x, y=self.y)
         else:
             self.label.place(x=0, y=0)
-        self.label.image = self.img 
     
     def deplacer_carte(self, x: int = None, y: int = None, carte_dessous = None) -> None:
         """ Change la position de la carte sur la fenêtre (interface graphique)"""
-
         if x == None and y == None:
             return
         elif x == None:
@@ -70,7 +67,6 @@ class Carte:
 
     def changer_visibilite_image(self) -> None:
         """ Change l'image de la carte en fonction de sa visibilité """
-
         if self.visible == True:
             self.img = PhotoImage(file="cartes/face_cachee.png")
             self.visible = False
