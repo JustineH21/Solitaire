@@ -3,7 +3,9 @@ from Carte_et_PileInfos import *
 from Pile_et_File import *
 
 class Jeu:
-    def __init__(self, pioche: list = None):
+    """ Classe représentant le jeu de Solitaire """
+
+    def __init__(self, pioche: list = None) -> None:
         self.cartes: list = [] # liste de toutes les cartes du jeu
         self.pioche: File = File(pioche)
         self.pioche_cartes_sorties: Pile = Pile()
@@ -25,11 +27,14 @@ class Jeu:
         self.pile_couleur_pique: PileInfos = PileInfos(None, 'pique', 1050)
 
     def initialiser_jeu(self) -> None:
-        # création des cartes
+        """ Initialise le jeu en créant les cartes et en les distribuant dans les piles de jeu """
+
         self.cartes = [Carte(couleur, valeur, False, None, 10, 10) for couleur in ['coeur', 'carreau', 'trefle', 'pique'] for valeur in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']]
         self.distribuer_cartes()
 
-    def distribuer_cartes(self):
+    def distribuer_cartes(self) -> None:
+        """ Distribue les cartes dans les piles de jeu au début de la partie """
+
         random.shuffle(self.cartes)
 
         for i in range(7): # pour chaque pile de jeu
@@ -51,7 +56,8 @@ class Jeu:
     def distribuer_cartes_pioche(self, file_cartes: File) -> None:
         """ Distribue les cartes qui lui sont données vers la défausse (pioche_cartes_sorties) """
         #print([file_cartes.f[i].valeur + " de " + file_cartes.f[i].couleur for i in range(file_cartes.taille())])
-        x = 145
+
+        x: int = 145
         for _ in range(min(3, file_cartes.taille())): # pour éviter qu'il y ait plus que 3 cartes 
             carte = file_cartes.defiler()
             carte.pile = self.pioche_cartes_sorties
@@ -65,9 +71,11 @@ class Jeu:
             x += 40
         #print([self.pioche_cartes_sorties.p[i].valeur + " de " + self.pioche_cartes_sorties.p[i].couleur for i in range(self.pioche_cartes_sorties.taille())])
 
-    def determiner_carte_cliquee(self, event):
-        x = event.x_root - fenetre.winfo_rootx()
-        y = event.y_root - fenetre.winfo_rooty()
+    def determiner_carte_cliquee(self, event: object) -> None:
+        """ Détermine la carte qui a été cliquée par le joueur en fonction des coordonnées du clic """
+        
+        x: int = event.x_root - fenetre.winfo_rootx()
+        y: int = event.y_root - fenetre.winfo_rooty()
         carte_cliquee = None
 
         if 10 <= x <= 137 and 10 <= y <= 190: # coordonnées de la pioche
@@ -128,6 +136,21 @@ class Jeu:
             self.bouger_carte()
 
     def verifier_validite_deplacement(self, carte_source: Carte, pile_cible: PileInfos) -> bool:
+        """ 
+        Vérifie si le déplacement de la carte_source vers la pile_cible est valide 
+        
+        Regles :
+        - Si la pile cible est vide :
+            - Si c'est une pile de jeu (numéro == 1 à 7) : seule un roi peut y être placé
+            - Si c'est une pile de fondation (numéro == None) : seul un as de la même couleur peut y être placé
+        - Si la pile cible n'est pas vide :
+            - Si c'est une pile de fondation (couleur != None) : même couleur et valeur +1
+            - Si c'est une pile de jeu (couleur == None) : couleurs différentes (rouge/noir) et valeur -1      
+
+        verifier_validite_deplacement(4 de coeur, pile_jeu3) 
+        >>> True
+
+        """
         if pile_cible.est_vide():
             if pile_cible.numero != None:
                 if carte_source.valeur == '13':  # Roi
@@ -163,7 +186,13 @@ class Jeu:
                 return False
 
     def verifier_victoire(self) -> bool:
-
+        """ 
+        Vérifie si la partie est gagnée (toutes les piles de fondation complètes) 
+        Regle : chaque pile de fondation doit contenir 13 cartes (de l'as au roi)
+        verifier_victoire()
+        >>> True #si la partie est gagnée
+        >>> False #si la partie n'est pas encore gagnée
+        """
         # On rassemble les piles de fondation dans une liste
         piles_fondation = [
             self.pile_couleur_coeur,
@@ -184,14 +213,24 @@ class Jeu:
             # Partie pas encore gagnée
             return False
 
-    def devoiler_carte_dessus(self):
+    def devoiler_carte_dessus(self) -> None:
+
+        """
+        Dévoile la carte du dessus de chaque pile de jeu s'il y en a une et si elle n'est pas déjà visible 
+        On regarde chaque pile de jeu dans la liste des piles de jeu:
+        - si la pile n'est pas vide, on prend la carte du dessus
+        - si cette carte n'est pas visible, on change sa visibilité pour la rendre visible
+        """
+
         for pile in self.liste_pile:
             if not pile.est_vide():         
                 carte_sommet = pile.sommet()  
                 if not carte_sommet.visible:  
                     carte_sommet.changer_visibilite_image() 
 
-    def piocher(self, nb_cartes_a_piocher:int = 0) -> None:
+    def piocher(self, nb_cartes_a_piocher: int = 0) -> None:
+        """ Pioche des cartes de la pioche vers la pioche_cartes_sorties"""
+
         nb_cartes_a_decaler = min(3, self.pioche_cartes_sorties.taille())
         pile_intermediaire = Pile()
         for _ in range(nb_cartes_a_decaler):
@@ -219,6 +258,7 @@ class Jeu:
             self.nb_cartes_pioche_sorties = 3
 
     def renfiler_pioche(self) -> None:
+        """ Renfile les cartes de la pioche_cartes_sorties vers la pioche """
         if not self.pioche_cartes_sorties.est_vide():
             pile_intermediaire = Pile()
             for _ in range(self.pioche_cartes_sorties.taille()):
@@ -233,7 +273,7 @@ class Jeu:
 
         #print([self.pioche.f[i].valeur + " de " + self.pioche.f[i].couleur for i in range(self.pioche.taille())])
 
-    def bouger_carte_1(self) -> None:
+    def bouger_carte_1(self) -> None: #test de deplacement d'une seule carte
         """ Déplace la carte cliquée vers une pile valide si possible"""
         if self.carte_cliquee is None:
             return  # aucune carte à déplacer
@@ -277,9 +317,9 @@ class Jeu:
         while pile_source.sommet() != self.carte_cliquee: #tant qu'on retrouve pas la carte
             pile_deplacement.empiler(pile_source.depiler())
 
-        pile_deplacement.empiler(pile_source.depiler())
+        pile_deplacement.empiler(pile_source.depiler()) #on empile la carte cliquée aussi
 
-        for pile_cible in self.liste_pile + [self.pile_couleur_coeur, self.pile_couleur_carreau, self.pile_couleur_trefle, self.pile_couleur_pique]:
+        for pile_cible in self.liste_pile + [self.pile_couleur_coeur, self.pile_couleur_carreau, self.pile_couleur_trefle, self.pile_couleur_pique]: #deplacement intelligent
             
             if not(pile_cible == pile_source) and self.verifier_validite_deplacement(self.carte_cliquee, pile_cible):                
                 while pile_deplacement.taille() > 0:
