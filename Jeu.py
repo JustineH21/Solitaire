@@ -72,10 +72,8 @@ class Jeu:
 
         if 10 <= x <= 137 and 10 <= y <= 190: # coordonnées de la pioche
             if not self.pioche.est_vide():
-                print("Pioche cliquée")
                 self.piocher(nb_cartes_a_piocher = min(3, self.pioche.taille()))
             else:
-                print("Pioche vide")
                 self.renfiler_pioche()
         elif 225 <= x <= 355 and 10 <= y <= 190: # coordonnées des cartes de la défausse
             pile_intermediaire = Pile()
@@ -90,7 +88,6 @@ class Jeu:
             while not pile_intermediaire.est_vide():
                 self.pioche_cartes_sorties.empiler(pile_intermediaire.depiler())
             self.carte_cliquee = carte_cliquee
-            print("Carte cliquée :", self.carte_cliquee.couleur, self.carte_cliquee.valeur)
         else:
             pile_cliquee = None
             for pile in self.liste_pile:
@@ -126,8 +123,6 @@ class Jeu:
                 pile_cliquee.empiler(pile_intermediaire.depiler())
 
             self.carte_cliquee = carte_cliquee
-            if self.carte_cliquee != None:
-                print("Carte cliquée :", self.carte_cliquee.couleur, self.carte_cliquee.valeur)
 
         if carte_cliquee != None:
             self.bouger_carte()
@@ -264,7 +259,6 @@ class Jeu:
                     carte_a_deplacer.deplacer_carte(x=pile_cible.x, y=nouvelle_y, carte_dessous=pile_cible.sommet())
                 pile_cible.empiler(carte_a_deplacer)
 
-                print(f"La carte {carte_a_deplacer.valeur} de {carte_a_deplacer.couleur} déplacée vers la pile {pile_cible.numero if pile_cible.numero else pile_cible.couleur}")
                 self.carte_cliquee = None
                 break  # une seule carte déplacée à la fois
 
@@ -297,7 +291,6 @@ class Jeu:
                     else:
                         carte.deplacer_carte(x=pile_cible.x, y=nouvelle_y, carte_dessous=pile_cible.sommet())
                     pile_cible.empiler(carte) 
-                    print(f"La carte {carte.valeur} de {carte.couleur} déplacée vers la pile {pile_cible.numero if pile_cible.numero else pile_cible.couleur}")
 
                 if pile_source == self.pioche_cartes_sorties:
                     if self.pioche_cartes_sorties.taille() > 3:
